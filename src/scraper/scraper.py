@@ -1,46 +1,29 @@
 import requests
 from bs4 import BeautifulSoup
-from src.scraper.translator import translate
+from .translator import translate_product
 
-
-def scrape_product_data(product_url):
-    """
-    Scrape product data from a given product URL.
-    """
+def scrape_product_data(url):
     try:
-        # Send request to product page
-        response = requests.get(product_url)
-        if response.status_code != 200:
-            print(f"Failed to fetch product page: {response.status_code}")
-            return
-
-        # Parse the HTML content using BeautifulSoup
+        response = requests.get(url)
+        response.raise_for_status()  # Check if request was successful
         soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Example of scraping product title, price, stock, and images
+        title = soup.find('h1', class_='product-title').text
+        price = soup.find('span', class_='product-price').text
+        stock_status = "In Stock" if soup.find('span', class_='in-stock') else "Out of Stock"
+        images = [img['src'] for img in soup.find_all('img', class_='product-image')]
 
-        # Extract product details
-        title = soup.find('h1', class_='product-title').get_text(strip=True)
-        description = soup.find('div', class_='product-description').get_text(strip=True)
-        price = soup.find('span', class_='product-price').get_text(strip=True)
-        variants = [variant.get_text(strip=True) for variant in soup.select('.product-variant')]
-        stock_quantity = soup.find('span', class_='stock-quantity').get_text(strip=True)
-        image_urls = [img['src'] for img in soup.find_all('img', class_='product-image')]
+        # Translate the title to English
+        translated_title = translate_product(title)
 
-        # Translate the title and description
-        title_en = translate(title)
-        description_en = translate(description)
-
-        # Structured product data
-        product_data = {
-            "title": title_en,
-            "description": description_en,
-            "price": price,
-            "variants": variants,
-            "stock_quantity": stock_quantity,
-            "images": image_urls
+        # Return the scraped data
+        return {
+            'title': translated_title,
+            'price': price,
+            'stock_status': stock_status,
+            'images': images
         }
-
-        return product_data
-
     except Exception as e:
         print(f"Error scraping product data: {e}")
         return None

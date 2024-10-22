@@ -1,24 +1,21 @@
-import pymongo
-from src.config import MONGO_URI, DATABASE_NAME, COLLECTION_NAME
+# src/db/mongo_connector.py
+from pymongo import MongoClient
 
-
-def connect_to_mongo():
-    """
-    Connect to MongoDB.
-    """
-    client = pymongo.MongoClient(MONGO_URI)
-    db = client[DATABASE_NAME]
-    collection = db[COLLECTION_NAME]
-    return collection
-
-
-def save_to_mongo(product_data):
-    """
-    Save product data to MongoDB.
-    """
+def get_db_connection():
     try:
-        collection = connect_to_mongo()
-        collection.insert_one(product_data)
-        print("Product data saved successfully to MongoDB")
+        client = MongoClient("mongodb://localhost:27017/")
+        db = client['product_scraper']
+        return db
     except Exception as e:
-        print(f"Error saving data to MongoDB: {e}")
+        print(f"Error connecting to database: {e}")
+        return None
+
+def store_product(product_data):
+    db = get_db_connection()
+    if db:
+        try:
+            products_collection = db['products']
+            products_collection.insert_one(product_data)
+            print("Product data successfully stored in the database.")
+        except Exception as e:
+            print(f"Error storing product data: {e}")
