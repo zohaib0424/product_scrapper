@@ -1,7 +1,7 @@
 from deep_translator import GoogleTranslator
 
 
-def translate(input: str) -> str:
+def translate_product(input: str) -> str:
     """
     Translate the input text to English.
     """
