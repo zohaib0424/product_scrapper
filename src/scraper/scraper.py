@@ -42,6 +42,32 @@ def extract_swatch_options(extra_script):
         return [], []  # Return empty lists if extraction fails
 
 
+def extract_description(soup):
+    """Extract product description from the HTML."""
+    try:
+        description_div = soup.find('div', class_='product attribute description')
+        if description_div:
+            value_div = description_div.find('div', class_='value')
+            if value_div:
+                return value_div.get_text(strip=True)
+        return None
+    except Exception as e:
+        print(f"Failed to extract description: {e}")
+        return None
+
+def extract_manufacturer_country(soup):
+    """Extract country of manufacture from the HTML."""
+    try:
+        country_label = soup.find('span', class_='col label', text=re.compile("Country of Manufacture"))
+        if country_label:
+            country_value_span = country_label.find_next('span', class_='pdp_attributes_country_of_manufacture')
+            if country_value_span:
+                return country_value_span.get_text(strip=True)
+        return None
+    except Exception as e:
+        print(f"Failed to extract manufacturer country: {e}")
+        return None
+    
 def extract_product_info(product_script_tag):
     """Extract product information from the product script tag."""
     product_info = {}
@@ -105,6 +131,20 @@ def scrape_product_data(product_url):
         print("No swatch-options script tag found.")
         product_data['sizes'] = []
         product_data['colors'] = []
+        
+    description = extract_description(soup)
+    if description:
+        product_data['description'] = description
+    else:
+        print("No description found.")
+        product_data['description'] = None
+       
+    manufacturer_country = extract_manufacturer_country(soup)
+    if manufacturer_country:
+        product_data['manufacturerCountry'] = manufacturer_country
+    else:
+        print("No manufacturer country found.")
+        product_data['manufacturerCountry'] = None
 
     return product_data if product_data else None
 
