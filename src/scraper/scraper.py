@@ -34,9 +34,9 @@ def extract_swatch_options(extra_script):
         json_data = re.search(r'\{.*\}', script_content).group(0)
         json_obj = json.loads(json_data)
 
-        sizes = json_obj.get("attributes", {}).get("558", {}).get("options", [])
+        variants = json_obj.get("attributes", {}).get("558", {}).get("options", [])
         colors = json_obj.get("attributes", {}).get("277", {}).get("options", [])
-        return sizes, colors
+        return variants, colors
     except (json.JSONDecodeError, AttributeError) as e:
         print(f"Failed to extract size data: {e}")
         return [], []  # Return empty lists if extraction fails
@@ -99,8 +99,6 @@ def scrape_product_data(product_url):
     
     product_data = {}
     soup = BeautifulSoup(response.content, 'html.parser')
-    
-    print('here is the soup',soup)
 
     product_script_tag = soup.find('script', text=re.compile('magentoStorefrontEvents.context.setProduct'))
     script_tags = soup.find_all('script', {'type': 'text/x-magento-init'})
@@ -124,12 +122,12 @@ def scrape_product_data(product_url):
 
     # Extract swatch options
     if extra_product_script_tag:
-        sizes, colors = extract_swatch_options(extra_product_script_tag)
-        product_data['sizes'] = sizes
+        variants, colors = extract_swatch_options(extra_product_script_tag)
+        product_data['variants'] = variants
         product_data['colors'] = colors
     else:
         print("No swatch-options script tag found.")
-        product_data['sizes'] = []
+        product_data['variants'] = []
         product_data['colors'] = []
         
     description = extract_description(soup)
