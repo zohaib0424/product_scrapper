@@ -73,21 +73,34 @@ def extract_product_info(product_script_tag):
     product_info = {}
     try:
         script_content = product_script_tag.string
-        product_info['name'] = re.search(r'"name":"(.*?)"', script_content).group(1)
-        product_info['productId'] = re.search(r'"productId":(\d+)', script_content).group(1)
-        product_info['sku'] = re.search(r'"sku":"(.*?)"', script_content).group(1)
-        product_info['canonicalUrl'] = re.search(r'"canonicalUrl":"(.*?)"', script_content).group(1).replace('\\/', '/')
+        
+        name_match = re.search(r'"name":"(.*?)"', script_content)
+        product_info['name'] = name_match.group(1) if name_match else None
+        
+        product_id_match = re.search(r'"productId":(\d+)', script_content)
+        product_info['productId'] = product_id_match.group(1) if product_id_match else None
+        
+        sku_match = re.search(r'"sku":"(.*?)"', script_content)
+        product_info['sku'] = sku_match.group(1) if sku_match else None
+        
+        canonical_url_match = re.search(r'"canonicalUrl":"(.*?)"', script_content)
+        product_info['canonicalUrl'] = canonical_url_match.group(1).replace('\\/', '/') if canonical_url_match else None
+        
         categories_match = re.search(r'"categories":\[(.*?)\]', script_content)
         product_info['categories'] = re.findall(r'"(.*?)"', categories_match.group(1)) if categories_match else []
+        
         pricing_match = re.search(r'"pricing":(.*?)}', script_content)
         product_info['pricing'] = pricing_match.group(1) if pricing_match else {}
-        product_info['mainImageUrl'] = re.search(r'"mainImageUrl":"(.*?)"', script_content).group(1).replace('\\/', '/') if re.search(r'"mainImageUrl":"(.*?)"', script_content) else None
+        
+        main_image_match = re.search(r'"mainImageUrl":"(.*?)"', script_content)
+        product_info['mainImageUrl'] = main_image_match.group(1).replace('\\/', '/') if main_image_match else None
 
         return product_info
+    
     except (AttributeError, json.JSONDecodeError) as e:
         print(f"Failed to extract product info: {e}")
         return {}  # Return empty dict if extraction fails
-
+ 
 
 def scrape_product_data(product_url):
     """Main function to scrape product data from the given URL."""
@@ -99,6 +112,7 @@ def scrape_product_data(product_url):
     
     product_data = {}
     soup = BeautifulSoup(response.content, 'html.parser')
+    print(soup)
 
     product_script_tag = soup.find('script', text=re.compile('magentoStorefrontEvents.context.setProduct'))
     script_tags = soup.find_all('script', {'type': 'text/x-magento-init'})
